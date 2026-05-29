@@ -1,0 +1,4 @@
+pdf-summary/easydata/data/train/*.zip
+pdf-summary/paddletrain/
+pdf-summary/backend/.env
+pdf-summary/backend/.env
