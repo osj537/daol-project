@@ -1,9 +1,11 @@
 import time
 import numpy as np
+import os
 
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 
 from .image_preprocess import preprocess_for_ocr
+from .markdown_layout import to_layout_markdown
 from .pdf_page_renderer import render_input_to_images
 from .types import OcrResult
 
@@ -14,20 +16,23 @@ def _build_reader(langs: list):
     except ImportError as exc:
         raise HTTPException(status_code=503, detail=f"easyocr 미설치: {exc}")
 
+    use_gpu = os.getenv("OCR_USE_GPU", "true").lower() in {"1", "true", "yes", "on"}
+    if use_gpu:
+        try:
+            return easyocr.Reader(langs, gpu=True)
+        except Exception as exc:
+            print(f"⚠️ EasyOCR GPU 초기화 실패, CPU로 폴백합니다: {exc}")
     return easyocr.Reader(langs, gpu=False)
 
 
-async def extract_text(file: UploadFile, langs: list = None) -> OcrResult:
+async def extract_text(contents: bytes, filename: str, langs: list = None) -> OcrResult:
     start_time = time.time()
-    contents = await file.read()
-
     if len(contents) == 0:
         raise HTTPException(status_code=422, detail="파일이 비어있습니다.")
 
     if langs is None:
         langs = ["ko", "en"]
 
-    filename = file.filename or "uploaded_file"
     extension = filename[filename.rfind("."):].lower() if "." in filename else ""
     images = render_input_to_images(contents, extension)
 
@@ -49,7 +54,7 @@ async def extract_text(file: UploadFile, langs: list = None) -> OcrResult:
                 page_text = "\n".join([text for text in retry_results if text]).strip()
 
             if page_text:
-                parts.append(f"[페이지 {idx}]\n{page_text}")
+                parts.append(f"[페이지 {idx}]\n{to_layout_markdown(page_text)}")
                 successful_pages += 1
         except Exception as exc:
             if first_error is None:

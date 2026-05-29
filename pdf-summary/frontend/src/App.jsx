@@ -1,13 +1,26 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import Header from './components/Header';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import PdfSummary from "./pages/PdfSummary.jsx";
-import MyPage from './pages/MyPage.jsx';
-import AdminDashboard from './pages/AdminDashboard';
-import UserList from './pages/UserList';  // 정재훈 추가 (2026-02-27): 전체 요약/사용자 목록 조회 페이지 (관리자 전용)
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import Header from "./components/Header";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import PdfSummary from "./pages/PdfSummary";
+import HomeHub from "./pages/HomeHub";
+import ChatSummary from "./pages/ChatSummary";
+import MyPage from "./pages/MyPage"; // 이재윤 MyPage 컴포넌트 분리
+import AdminDashboard from "./pages/AdminDashboard";
+import UserList from "./pages/UserList"; // 정재훈 추가 (2026-02-27): 전체 요약/사용자 목록 조회 페이지 (관리자 전용)
+import KakaoSuccess from "./pages/Payment/KakaoSuccess";
+import KakaoFail from "./pages/Payment/KakaoFail";
+import WebSocketChat from "./components/WebSocketChat";
+// [2026-03-25 osj] 가이드 챗봇 - 전체 페이지 공통
+import GuideChatbot from "./components/GuideChatbot/GuideChatbot";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -61,16 +74,38 @@ function App() {
 
   return (
     <Router>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: { fontSize: "16px", padding: "14px 20px", minWidth: "280px" },
+        }}
+      />
+
+      {/* 실시간 채팅 위젯 */}
+      <WebSocketChat />
+
+      {/* [2026-03-25 osj] 가이드 챗봇 - 로그인 시 전체 페이지 표시 */}
+      {isLoggedIn && <GuideChatbot />}
+
       {isLoggedIn && <Header setIsLoggedIn={setIsLoggedIn} />}
       <Routes>
         {/* 공개 라우트 */}
-        <Route 
-          path="/login" 
-          element={<PublicRoute component={() => <Login setIsLoggedIn={setIsLoggedIn} />} />} 
+        <Route
+          path="/login"
+          element={
+            <PublicRoute
+              component={() => <Login setIsLoggedIn={setIsLoggedIn} />}
+            />
+          }
         />
-        <Route 
-          path="/register" 
-          element={<PublicRoute component={() => <Register setIsLoggedIn={setIsLoggedIn} />} />} 
+        <Route
+          path="/register"
+          element={
+            <PublicRoute
+              component={() => <Register setIsLoggedIn={setIsLoggedIn} />}
+            />
+          }
         />
 
         {/* 보호된 라우트 */}
@@ -79,27 +114,36 @@ function App() {
             - 용도: 전체 요약 이력 조회 + 사용자 정보 포함 목록 (슬라이드 기준 UI 구현 예정)
             - 접근: 로그인 + 관리자 권한 사용자만 가능 (ProtectedRoute 적용)
             - 참고: 추후 role 기반 추가 제한 가능 */}
-        <Route 
-          path="/userlist" 
-          element={<ProtectedRoute component={UserList} />} 
+        <Route
+          path="/userlist"
+          element={<ProtectedRoute component={UserList} />}
         />
-        <Route 
-          path="/" 
-          element={<ProtectedRoute component={PdfSummary} />} 
+        <Route path="/" element={<ProtectedRoute component={HomeHub} />} />
+        <Route
+          path="/pdf-summary"
+          element={<ProtectedRoute component={PdfSummary} />}
         />
-        <Route 
-          path="/mypage" 
-          element={<ProtectedRoute component={MyPage} />} 
+        <Route
+          path="/chat-summary"
+          element={<ProtectedRoute component={ChatSummary} />}
         />
-        <Route 
-          path="/admin" 
-          element={<ProtectedRoute component={AdminDashboard} />} 
+        <Route path="/mypage" element={<ProtectedRoute component={MyPage} />} />
+        <Route
+          path="/admin"
+          element={<ProtectedRoute component={AdminDashboard} />}
         />
-
+        <Route
+          path="/payments/kakao/success"
+          element={<KakaoSuccess />}
+        />
+        <Route
+          path="/payments/kakao/fail"
+          element={<KakaoFail />}
+        />
         {/* 기타 경로 처리 */}
-        <Route 
-          path="*" 
-          element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} 
+        <Route
+          path="*"
+          element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />}
         />
       </Routes>
     </Router>
