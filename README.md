@@ -2,8 +2,6 @@
 
 > LLM(Gemma)과 OCR을 결합해 문서 텍스트 추출부터 AI 요약까지 전 과정을 자동화한 풀스택 플랫폼
 
-![서비스 메인 화면 스크린샷 또는 GIF 삽입 위치]
-
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev)
@@ -17,7 +15,7 @@
 법률·일반 문서의 수동 분류 및 요약 업무를 자동화하기 위해 개발한 플랫폼입니다.
 EasyOCR로 텍스트를 추출하고, LLM(Ollama/Gemma)으로 요약한 결과를 SSE 스트리밍으로 실시간 제공합니다.
 
-- **개발 기간**: 2026.02 ~ 2026.04 (3개월)
+- **개발 기간**: 2026.02 ~ 2026.04 (2개월)
 - **참여 인원**: 인턴십 프로젝트 (글로벌 아카데미 더다올디앤씨)
 - **역할**: 풀스택 (프론트엔드 + 백엔드 + AI 파이프라인)
 
@@ -48,17 +46,17 @@ EasyOCR로 텍스트를 추출하고, LLM(Ollama/Gemma)으로 요약한 결과�
 
 ## 👤 본인 기여 (오상진)
 
-| 분류                     | 담당 내용                                                                                           |
-| ------------------------ | --------------------------------------------------------------------------------------------------- |
-| **SSE 텍스트 추출**      | `StreamingResponse` 기반 SSE 스트림, `start → page/ocr_progress → done/error` 이벤트 순서 설계      |
-| **SSE 요약**             | 토큰 단위 스트리밍, 프론트엔드 30ms 배치 플러시로 렌더링 횟수 제한 (최대 33회/초)                   |
-| **SSE 번역**             | 캐시 히트 시 DB 저장 결과를 단어 단위로 재스트리밍, LLM 재호출 없이 타이핑 효과 유지                |
-| **문서 CRUD API**        | 편집·삭제·공개/비공개 토글 API 풀스택 구현, `can_user_access_document()` ACL 권한 체계              |
-| **보안 처리**            | 중요 문서 4자리 숫자 비밀번호 검증, `is_important` 상태에 따른 password 자동 초기화                 |
-| **Discord 모니터링**     | 전역 `HTTPException` 핸들러로 에러 메시지·상태코드·발생 경로·사용자 ID 자동 전송                    |
-| **마이페이지 일괄 삭제** | `Promise.all()` 병렬 DELETE 요청, 완료 후 로컬 상태 즉시 필터링                                     |
-| **챗봇 UI**              | 좌하단 고정 패널, TOOLTIP_TIPS 12초 로테이션, 카테고리 탭 필터링, 정적 Q&A 구조                     |
-| **알림 시스템**          | `alert()` 대신 `react-hot-toast` 전역 등록, `toast.success / toast.error` 통일                      |
+| 분류                     | 담당 내용                                                                                           | 주요 파일                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **SSE 텍스트 추출**      | `StreamingResponse` 기반 SSE 스트림, `start → page/ocr_progress → done/error` 이벤트 순서 설계      | `backend/services/ai_service_extract.py`                                                                      |
+| **SSE 요약**             | 토큰 단위 스트리밍, 프론트엔드 30ms 배치 플러시로 렌더링 횟수 제한 (최대 33회/초)                   | `frontend/src/hooks/usePdfSummary.js`                                                                         |
+| **SSE 번역**             | 캐시 히트 시 DB 저장 결과를 단어 단위로 재스트리밍, LLM 재호출 없이 타이핑 효과 유지                | `backend/routers/document/translate.py`                                                                       |
+| **문서 CRUD API**        | 편집·삭제·공개/비공개 토글 API 풀스택 구현, `can_user_access_document()` ACL 권한 체계              | `backend/routers/document/crud.py` · `backend/database.py`                                                    |
+| **보안 처리**            | 중요 문서 4자리 숫자 비밀번호 검증, `is_important` 상태에 따른 password 자동 초기화                 | `backend/routers/document/crud.py` · `frontend/src/pages/PdfSummary/SecurityOptions.jsx`                      |
+| **Discord 모니터링**     | 전역 `HTTPException` 핸들러로 에러 메시지·상태코드·발생 경로·사용자 ID 자동 전송                    | `backend/utils/discord.py` · `backend/main.py`                                                                |
+| **마이페이지 일괄 삭제** | `Promise.all()` 병렬 DELETE 요청, 완료 후 로컬 상태 즉시 필터링                                     | `frontend/src/hooks/useDocumentHistory.js` · `frontend/src/pages/MyPage/index.jsx`                            |
+| **챗봇 UI**              | 좌하단 고정 패널, TOOLTIP_TIPS 12초 로테이션, 카테고리 탭 필터링, 정적 Q&A 구조                     | `frontend/src/components/GuideChatbot/GuideChatbot.jsx` · `frontend/src/components/GuideChatbot/guideData.js` |
+| **알림 시스템**          | `alert()` 대신 `react-hot-toast` 전역 등록, `toast.success / toast.error` 통일                      | `frontend/src/App.jsx` · `frontend/src/main.jsx`                                                              |
 | **OCR 파인튜닝**         | PDF·HWP·HWPX 포맷별 텍스트 추출 → Pillow 합성 이미지 15만 장 → LMDB 저장 → EasyOCR 파인튜닝 전 과정 |
 | **학습 최적화**          | `ThreadPoolExecutor(16 workers)` 병렬 생성, 5,000개마다 commit으로 메모리 과부하 방지               |
 
